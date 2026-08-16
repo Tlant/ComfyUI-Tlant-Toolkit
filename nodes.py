@@ -218,6 +218,65 @@ class TlantRandomLine:
         return float("NaN")
 
 
+class DynamicStringOutputs(tuple):
+    def __getitem__(self, index):
+        if isinstance(index, int) and index >= len(self):
+            return "STRING"
+        return super().__getitem__(index)
+
+
+def connected_output_count(prompt, unique_id):
+    output_slots = set()
+    source_id = str(unique_id)
+    for node in prompt.values():
+        for value in node.get("inputs", {}).values():
+            if not isinstance(value, list) or len(value) != 2 or str(value[0]) != source_id:
+                continue
+            try:
+                output_slot = int(value[1])
+            except (TypeError, ValueError):
+                continue
+            if output_slot >= 0:
+                output_slots.add(output_slot)
+    return max(output_slots, default=0) + 1
+
+
+class TlantRandomLines:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "text": ("STRING", {"forceInput": True}),
+                "是否重复": ("BOOLEAN", {"default": False, "label_on": "是", "label_off": "否"}),
+            },
+            "hidden": {
+                "prompt": "PROMPT",
+                "unique_id": "UNIQUE_ID",
+            },
+        }
+
+    RETURN_TYPES = DynamicStringOutputs(("STRING",))
+    RETURN_NAMES = ("line 1",)
+    FUNCTION = "random_lines"
+    CATEGORY = "Tlant Toolkit/Text"
+
+    def random_lines(self, text, prompt, unique_id, **kwargs):
+        lines = [line for line in text.splitlines() if line.strip()]
+        output_count = connected_output_count(prompt, unique_id)
+        if output_count > len(lines):
+            raise ValueError(
+                f"Random Lines requested {output_count} outputs, but input contains only {len(lines)} non-empty lines."
+            )
+
+        if kwargs["是否重复"]:
+            return tuple(secrets.choice(lines) for _ in range(output_count))
+        return tuple(random.SystemRandom().sample(lines, output_count))
+
+    @classmethod
+    def IS_CHANGED(cls, *args, **kwargs):
+        return float("NaN")
+
+
 def normalize_base_url(server_url):
     url = (server_url or "").strip()
     if not url:
@@ -498,11 +557,13 @@ class TlantLlamaServerChat:
 NODE_CLASS_MAPPINGS = {
     "TlantLoadFileBatch": TlantLoadFileBatch,
     "TlantRandomLine": TlantRandomLine,
+    "TlantRandomLines": TlantRandomLines,
     "TlantLlamaServerChat": TlantLlamaServerChat,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "TlantLoadFileBatch": "Load File Batch (Tlant)",
     "TlantRandomLine": "Random Line (No Seed) (Tlant)",
+    "TlantRandomLines": "Random Lines (Tlant)",
     "TlantLlamaServerChat": "Llama Server Chat/Vision (Tlant)",
 }
