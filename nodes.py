@@ -5,6 +5,7 @@ import json
 import os
 import random
 import re
+import secrets
 import threading
 import time
 import urllib.error
@@ -189,6 +190,31 @@ class TlantLoadFileBatch:
                 return (selected, stat.st_mtime_ns, stat.st_size)
             except OSError:
                 return selected
+        return float("NaN")
+
+
+class TlantRandomLine:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "text": ("STRING", {"forceInput": True}),
+            }
+        }
+
+    RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("line",)
+    FUNCTION = "random_line"
+    CATEGORY = "Tlant Toolkit/Text"
+
+    def random_line(self, text):
+        lines = [line for line in text.splitlines() if line.strip()]
+        if not lines:
+            return ("",)
+        return (secrets.choice(lines),)
+
+    @classmethod
+    def IS_CHANGED(cls, *args, **kwargs):
         return float("NaN")
 
 
@@ -471,10 +497,12 @@ class TlantLlamaServerChat:
 
 NODE_CLASS_MAPPINGS = {
     "TlantLoadFileBatch": TlantLoadFileBatch,
+    "TlantRandomLine": TlantRandomLine,
     "TlantLlamaServerChat": TlantLlamaServerChat,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "TlantLoadFileBatch": "Load File Batch (Tlant)",
+    "TlantRandomLine": "Random Line (No Seed) (Tlant)",
     "TlantLlamaServerChat": "Llama Server Chat/Vision (Tlant)",
 }

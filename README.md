@@ -5,6 +5,7 @@ Small utility nodes for ComfyUI workflows.
 ## Nodes
 
 - `Load File Batch (Tlant)`: selects one file from a folder by fixed index, incremental counter, or seed-stable random choice, and outputs the absolute path plus filename metadata.
+- `Random Line (No Seed) (Tlant)`: selects a non-empty line from a connected multiline string on every execution without a seed or control-after-generate widget.
 - `MiniMax H3提示词扩写指令·简单模式（Tlant）`: 使用少量常用中文选项生成完整、无状态的 MiniMax H3 I2VA 扩写指令。
 - `MiniMax H3高级配置·基础生成（Tlant）`: 配置时长、画幅、主题和创意策略。
 - `MiniMax H3高级配置·人物一致性（Tlant）`: 配置身份、人脸、视线和表情稳定性。
